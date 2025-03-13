@@ -18,6 +18,14 @@
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
       function main() {
+        let cube;
+        let sphere;
+        let cylinder;
+        let renderTarget;
+        let renderTargetScene;
+        let renderTargetCamera;
+        let g_oldComputerGTLF;
+
         const canvas = document.querySelector("#c");
         const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 
@@ -39,9 +47,7 @@
           const planeSize = 40;
 
           const loader = new THREE.TextureLoader();
-          const texture = loader.load(
-            "Resources/Textures/checker.png"
-          );
+          const texture = loader.load("Resources/Textures/checker.png");
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.magFilter = THREE.NearestFilter;
@@ -80,6 +86,30 @@
           scene.add(light.target);
         }
 
+        function replaceScreenTextureInGLTF(
+          gtlf,
+          renderTargetTexture,
+          materialName
+        ) {
+          /**
+           * Recursively traverses a GLTF scene and replaces all textures named "Screen"
+           * with the provided renderTargetTexture.
+           *
+           * @param {THREE.Group|THREE.Scene} gtlf The root scene of the loaded GLTF model.
+           * @param {THREE.Texture} renderTargetTexture The texture from a WebGLRenderTarget to use as replacement.
+           */
+           gtlf.scene.traverse(function (node) {
+            if (node.isMesh && node.material) {
+              const material = node.material;
+              console.log(node.material.name);
+              if (materialName == material.name) {
+               const newMaterial = new THREE.MeshPhongMaterial( { map: renderTargetTexture } );
+               node.material = newMaterial;
+              }
+            }
+          });
+        }
+
         function frameArea(sizeToFitOnScreen, boxSize, boxCenter, camera) {
           const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
           const halfFovY = THREE.MathUtils.degToRad(camera.fov * 0.5);
@@ -110,28 +140,79 @@
 
         {
           const gltfLoader = new GLTFLoader();
-          gltfLoader.load("Resources/Models/standing_desk/scene.gltf", (gltf) => {
-            const root = gltf.scene;
-            root.scale.set(3.0, 3.0, 3.0); 
-            scene.add(root);
-            // compute the box that contains all the stuff
-            // from root and below
-            const box = new THREE.Box3().setFromObject(root);
-            const boxSize = box.getSize(new THREE.Vector3()).length();
-            const boxCenter = box.getCenter(new THREE.Vector3());
-            // set the camera to frame the box
-            frameArea(boxSize*2.0, boxSize*2.0, boxCenter, camera);
-            // update the Trackball controls to handle the new size
-            controls.maxDistance = boxSize * 10;
-            controls.target.copy(boxCenter);
-            controls.update();
-          });
-          
+          gltfLoader.load(
+            "Resources/Models/standing_desk/scene.gltf",
+            (gltf) => {
+              const root = gltf.scene;
+              root.scale.set(3.0, 3.0, 3.0);
+              scene.add(root);
+              // compute the box that contains all the stuff
+              // from root and below
+              const box = new THREE.Box3().setFromObject(root);
+              const boxSize = box.getSize(new THREE.Vector3()).length();
+              const boxCenter = box.getCenter(new THREE.Vector3());
+              // set the camera to frame the box
+              frameArea(boxSize * 2.0, boxSize * 2.0, boxCenter, camera);
+              // update the Trackball controls to handle the new size
+              controls.maxDistance = boxSize * 10;
+              controls.target.copy(boxCenter);
+              controls.update();
+            }
+          );
+
           gltfLoader.load("Resources/Models/boy_nerd.glb", (gltf) => {
             const root = gltf.scene;
-            root.scale.set(3.25, 3.25, 3.25); 
+            root.scale.set(3.25, 3.25, 3.25);
             root.rotation.y = Math.PI;
             root.position.z += 2;
+            scene.add(root);
+          });
+
+          //NOTE TO GRADER: used AI to help do render to texture
+          renderTarget = new THREE.WebGLRenderTarget(512, 512);
+          renderTargetScene = new THREE.Scene();
+          renderTargetCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100); // Perspective camera now
+          renderTargetCamera.position.z = 5; // Position the camera
+          const geometryCube = new THREE.BoxGeometry(1, 1, 1);
+          const geometrySphere = new THREE.SphereGeometry(0.8, 32, 32);
+          const geometryCylinder = new THREE.CylinderGeometry(
+            0.6,
+            0.6,
+            1.5,
+            32
+          );
+          const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            wireframe: true,
+          }); // Wireframe for visibility
+
+          cube = new THREE.Mesh(geometryCube, material);
+          sphere = new THREE.Mesh(geometrySphere, material);
+          cylinder = new THREE.Mesh(geometryCylinder, material);
+
+          cube.position.x = -1.5;
+          sphere.position.x = 0;
+          cylinder.position.x = 1.5;
+
+          renderTargetScene.add(cube);
+          renderTargetScene.add(sphere);
+          renderTargetScene.add(cylinder);
+
+          const ambientLightRenderTarget = new THREE.AmbientLight(0x404040); // Soft ambient light
+          renderTargetScene.add(ambientLightRenderTarget);
+          const directionalLightRenderTarget = new THREE.DirectionalLight(
+            0xffffff,
+            1
+          );
+          directionalLightRenderTarget.position.set(1, 1, 1);
+          renderTargetScene.add(directionalLightRenderTarget);
+
+          gltfLoader.load("Resources/Models/old_computer.glb", (gltf) => {
+            g_oldComputerGTLF = gltf;
+            const root = gltf.scene;
+            root.scale.set(0.5, 0.5, 0.5);
+            root.position.z -= 0.5;
+            root.position.y += 4;
             scene.add(root);
           });
         }
@@ -148,13 +229,47 @@
           return needResize;
         }
 
+        {
+          const loader = new THREE.CubeTextureLoader();
+          const texture = loader.load([
+            "Resources/Textures/background.png",
+            "Resources/Textures/background.png",
+            "Resources/Textures/background.png",
+            "Resources/Textures/background.png",
+            "Resources/Textures/background.png",
+            "Resources/Textures/background.png",
+          ]);
+          scene.background = texture;
+        }
+
         function render() {
+          if (cube && sphere && cylinder) {
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+            sphere.rotation.y += 0.01;
+            cylinder.rotation.x += 0.01;
+            cylinder.rotation.z += 0.01;
+          }
+          renderer.setRenderTarget(renderTarget);
+          renderer.setClearColor(0xff0000, 1);
+          renderer.clear();
+          renderer.render(renderTargetScene, renderTargetCamera);
+
           if (resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
             camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
           }
 
+          renderer.setRenderTarget(null);
+          if (g_oldComputerGTLF){
+            replaceScreenTextureInGLTF(
+            g_oldComputerGTLF,
+              renderTarget.texture,
+              "Screen"
+            );
+          }
+          
           renderer.render(scene, camera);
 
           requestAnimationFrame(render);
