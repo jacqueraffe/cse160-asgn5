@@ -59,7 +59,30 @@
           cubeRenderTargetGeometry,
           cubeRenderTargetMaterial
         );
+        cubeRenderTarget.position.y+=1;
         sceneRenderTarget.add(cubeRenderTarget);
+
+        const cylinderRenderTargetGeometry = new THREE.CylinderGeometry();
+        const cylinderRenderTargetMaterial = new THREE.MeshBasicMaterial({
+          color: 0x00ffff,
+        }); // blue cylinder
+        const cylinderRenderTarget = new THREE.Mesh(
+          cylinderRenderTargetGeometry,
+          cylinderRenderTargetMaterial
+        );
+        cylinderRenderTarget.position.y+=0.5;
+        sceneRenderTarget.add(cylinderRenderTarget);
+
+        const sphereRenderTargetGeometry = new THREE.SphereGeometry();
+        const sphereRenderTargetMaterial = new THREE.MeshBasicMaterial({
+          color: 0x00ff00,
+        }); // green sphere
+        const sphereRenderTarget = new THREE.Mesh(
+          sphereRenderTargetGeometry,
+          sphereRenderTargetMaterial
+        );
+        sphereRenderTarget.position.y-=0.5;
+        sceneRenderTarget.add(sphereRenderTarget);
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color("black");
@@ -292,21 +315,11 @@
           const elapsedTime = clock.getElapsedTime();
           cubeRenderTarget.rotation.x += 0.01;
           cubeRenderTarget.rotation.y += 0.01;
+          sphereRenderTarget.rotation.y += 0.01;
+          cylinderRenderTarget.rotation.x += 0.01;
+          cylinderRenderTarget.rotation.z += 0.01;
 
-          if (cube && sphere && cylinder) {
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-            sphere.rotation.y += 0.01;
-            cylinder.rotation.x += 0.01;
-            cylinder.rotation.z += 0.01;
-          }
-          renderer.setRenderTarget(renderTarget);
-          if (Math.floor(elapsedTime % 2) == 0) {
-            renderer.setClearColor(0xff0000, 1);
-          } else {
-            renderer.setClearColor(0x000000, 1);
-          }
-          //renderer.render(renderTargetScene, renderTargetCamera);
+          renderer.render(renderTargetScene, renderTargetCamera);
           renderer.render(sceneRenderTarget, cameraRenderTarget); // Render the off-screen cube scene
 
           if (resizeRendererToDisplaySize(renderer)) {
