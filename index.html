@@ -41,8 +41,50 @@
         controls.target.set(0, 5, 0);
         controls.update();
 
+        // --- Render Target Scene (Off-screen scene for the spinning cube) ---
+        const sceneRenderTarget = new THREE.Scene();
+        const cameraRenderTarget = new THREE.PerspectiveCamera(
+          75,
+          1,
+          0.1,
+          1000
+        );
+        cameraRenderTarget.position.z = 3;
+
+        const cubeRenderTargetGeometry = new THREE.BoxGeometry();
+        const cubeRenderTargetMaterial = new THREE.MeshBasicMaterial({
+          color: 0xff6600,
+        }); // Orange cube
+        const cubeRenderTarget = new THREE.Mesh(
+          cubeRenderTargetGeometry,
+          cubeRenderTargetMaterial
+        );
+        sceneRenderTarget.add(cubeRenderTarget);
+
         const scene = new THREE.Scene();
         scene.background = new THREE.Color("black");
+        const camera1 = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        camera1.position.z = 5;
+
+        const planeGeometry = new THREE.PlaneGeometry(5, 5);
+
+        // --- Create Render Target Texture ---
+        const renderTarget2 = new THREE.WebGLRenderTarget(
+          512, // width of the texture
+          512 // height of the texture
+        );
+
+        // Create a material using the render target texture
+        const planeMaterial = new THREE.MeshBasicMaterial({
+          map: renderTarget2.texture, // Use the render target texture as the map
+        });
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        scene.add(plane);
 
         {
           const planeSize = 40;
@@ -201,6 +243,7 @@
           renderTargetScene.add(cube);
           renderTargetScene.add(sphere);
           renderTargetScene.add(cylinder);
+          renderTargetScene.add(cylinder);
 
           const ambientLightRenderTarget = new THREE.AmbientLight(0x404040); // Soft ambient light
           renderTargetScene.add(ambientLightRenderTarget);
@@ -249,6 +292,8 @@
             "Resources/Textures/background.png",
           ]);
           scene.background = texture;
+          //renderTargetScene.background = texture;
+          sceneRenderTarget.background = texture;
         }
 
         function render() {
@@ -267,14 +312,18 @@
           } else {
             renderer.setClearColor(0x000000, 1);
           }
-          renderer.clear();
-          renderer.render(renderTargetScene, renderTargetCamera);
+          //renderer.render(renderTargetScene, renderTargetCamera);
+          renderer.render(sceneRenderTarget, cameraRenderTarget); // Render the off-screen cube scene
 
           if (resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
             camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
           }
+
+          // **1. Render to Texture:**
+          renderer.setRenderTarget(renderTarget2); // Tell renderer to render to our renderTarget
+          renderer.render(sceneRenderTarget, cameraRenderTarget); // Render the off-screen cube scene
 
           renderer.setRenderTarget(null);
 
