@@ -94,7 +94,7 @@
         );
         camera1.position.z = 5;
 
-        const planeGeometry = new THREE.PlaneGeometry(0.8, 0.8);
+        const planeGeometry = new THREE.PlaneGeometry(0.85, 0.85);
 
         // --- Create Render Target Texture ---
         const renderTarget2 = new THREE.WebGLRenderTarget(
@@ -111,7 +111,7 @@
           map: renderTarget2.texture, // Use the render target texture as the map
         });
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.position.y += 3.9;
+        plane.position.y += 3.95;
         plane.rotation.x = Math.PI * -0.085;
         plane.position.z += 0.11;
         scene.add(plane);
@@ -159,31 +159,7 @@
           scene.add(light.target);
         }
 
-        function replaceScreenTextureInGLTF(
-          gtlf,
-          renderTargetTexture,
-          materialName
-        ) {
-          /**
-           * Recursively traverses a GLTF scene and replaces all textures named "Screen"
-           * with the provided renderTargetTexture.
-           *
-           * @param {THREE.Group|THREE.Scene} gtlf The root scene of the loaded GLTF model.
-           * @param {THREE.Texture} renderTargetTexture The texture from a WebGLRenderTarget to use as replacement.
-           */
-          gtlf.scene.traverse(function (node) {
-            if (node.isMesh && node.material) {
-              const material = node.material;
-              console.log(node.material.name);
-              if (materialName == material.name) {
-                const newMaterial = new THREE.MeshBasicMaterial({
-                  map: renderTargetTexture,
-                });
-                node.material = newMaterial;
-              }
-            }
-          });
-        }
+      //   
 
         function frameArea(sizeToFitOnScreen, boxSize, boxCenter, camera) {
           const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
@@ -278,11 +254,6 @@
             root.position.z -= 0.5;
             root.position.y += 4;
             scene.add(root);
-            replaceScreenTextureInGLTF(
-              g_oldComputerGTLF,
-              renderTarget.texture,
-              "Screen"
-            );
           });
         }
 
