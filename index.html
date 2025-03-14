@@ -18,6 +18,7 @@
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
       function main() {
+        const clock = new THREE.Clock();
         let cube;
         let sphere;
         let cylinder;
@@ -98,13 +99,15 @@
            * @param {THREE.Group|THREE.Scene} gtlf The root scene of the loaded GLTF model.
            * @param {THREE.Texture} renderTargetTexture The texture from a WebGLRenderTarget to use as replacement.
            */
-           gtlf.scene.traverse(function (node) {
+          gtlf.scene.traverse(function (node) {
             if (node.isMesh && node.material) {
               const material = node.material;
               console.log(node.material.name);
               if (materialName == material.name) {
-               const newMaterial = new THREE.MeshPhongMaterial( { map: renderTargetTexture } );
-               node.material = newMaterial;
+                const newMaterial = new THREE.MeshPhongMaterial({
+                  map: renderTargetTexture,
+                });
+                node.material = newMaterial;
               }
             }
           });
@@ -173,6 +176,7 @@
           renderTargetScene = new THREE.Scene();
           renderTargetCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100); // Perspective camera now
           renderTargetCamera.position.z = 5; // Position the camera
+          renderTargetCamera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
           const geometryCube = new THREE.BoxGeometry(1, 1, 1);
           const geometrySphere = new THREE.SphereGeometry(0.8, 32, 32);
           const geometryCylinder = new THREE.CylinderGeometry(
@@ -183,8 +187,8 @@
           );
           const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
-            wireframe: true,
-          }); // Wireframe for visibility
+            wireframe: false,
+          });
 
           cube = new THREE.Mesh(geometryCube, material);
           sphere = new THREE.Mesh(geometrySphere, material);
@@ -214,6 +218,11 @@
             root.position.z -= 0.5;
             root.position.y += 4;
             scene.add(root);
+            replaceScreenTextureInGLTF(
+              g_oldComputerGTLF,
+              renderTarget.texture,
+              "Screen"
+            );
           });
         }
 
@@ -243,6 +252,8 @@
         }
 
         function render() {
+          const elapsedTime = clock.getElapsedTime();
+
           if (cube && sphere && cylinder) {
             cube.rotation.x += 0.01;
             cube.rotation.y += 0.01;
@@ -251,7 +262,11 @@
             cylinder.rotation.z += 0.01;
           }
           renderer.setRenderTarget(renderTarget);
-          renderer.setClearColor(0xff0000, 1);
+          if (Math.floor(elapsedTime % 2) == 0) {
+            renderer.setClearColor(0xff0000, 1);
+          } else {
+            renderer.setClearColor(0x000000, 1);
+          }
           renderer.clear();
           renderer.render(renderTargetScene, renderTargetCamera);
 
@@ -262,14 +277,7 @@
           }
 
           renderer.setRenderTarget(null);
-          if (g_oldComputerGTLF){
-            replaceScreenTextureInGLTF(
-            g_oldComputerGTLF,
-              renderTarget.texture,
-              "Screen"
-            );
-          }
-          
+
           renderer.render(scene, camera);
 
           requestAnimationFrame(render);

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Render to Texture Demo</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; } /* Make canvas fill the container */
+    </style>
+</head>
+<body>
+
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.174.0    /examples/jsm/"
+          }
+        }
+      </script>
+      <script type="module">
+    import * as THREE from 'three';
+    document.addEventListener('DOMContentLoaded', () => {
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // --- Render Target Scene (Off-screen scene for the spinning cube) ---
+    const sceneRenderTarget = new THREE.Scene();
+    const cameraRenderTarget = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    cameraRenderTarget.position.z = 3;
+
+    const cubeRenderTargetGeometry = new THREE.BoxGeometry();
+    const cubeRenderTargetMaterial = new THREE.MeshBasicMaterial({ color: 0xff6600 }); // Orange cube
+    const cubeRenderTarget = new THREE.Mesh(cubeRenderTargetGeometry, cubeRenderTargetMaterial);
+    sceneRenderTarget.add(cubeRenderTarget);
+
+    // --- Main Scene (Scene where we'll display the render-to-texture) ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+
+    const planeGeometry = new THREE.PlaneGeometry(5, 5);
+
+    // --- Create Render Target Texture ---
+    const renderTarget = new THREE.WebGLRenderTarget(
+        512, // width of the texture
+        512  // height of the texture
+    );
+
+    // Create a material using the render target texture
+    const planeMaterial = new THREE.MeshBasicMaterial({
+        map: renderTarget.texture // Use the render target texture as the map
+    });
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    scene.add(plane);
+
+
+    // --- Animation Loop ---
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Rotate the plane
+        plane.rotation.x += 0.01;
+        plane.rotation.y += 0.01;
+
+
+        // Rotate the cube in the render target scene
+        cubeRenderTarget.rotation.x += 0.01;
+        cubeRenderTarget.rotation.y += 0.01;
+
+        // **1. Render to Texture:**
+        renderer.setRenderTarget(renderTarget); // Tell renderer to render to our renderTarget
+        renderer.setClearColor(new THREE.Color().setHex( 0x800000 ), 1.0)
+        renderer.render(sceneRenderTarget, cameraRenderTarget); // Render the off-screen cube scene
+
+        // **2. Reset Render Target:**
+        renderer.setRenderTarget(null); // Reset renderer to render to the canvas again
+
+        // 3. Render the Main Scene:
+        renderer.setClearColor(new THREE.Color().setHex( 0x008000 ), 1.0)
+        renderer.render(scene, camera); // Render the main scene (plane with the texture)
+    }
+
+    animate();
+});
+</script>
+
+</body>
+</html>
