@@ -71,12 +71,16 @@
         );
         camera1.position.z = 5;
 
-        const planeGeometry = new THREE.PlaneGeometry(5, 5);
+        const planeGeometry = new THREE.PlaneGeometry(0.8, 0.8);
 
         // --- Create Render Target Texture ---
         const renderTarget2 = new THREE.WebGLRenderTarget(
           512, // width of the texture
-          512 // height of the texture
+          512, // height of the texture
+          {
+            generateMipmaps: true, // Enable mipmap generation
+            minFilter: THREE.LinearMipMapLinearFilter, // Use a mipmap filter
+          }
         );
 
         // Create a material using the render target texture
@@ -84,6 +88,9 @@
           map: renderTarget2.texture, // Use the render target texture as the map
         });
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.position.y += 3.9;
+        plane.rotation.x = Math.PI * -0.085;
+        plane.position.z += 0.11;
         scene.add(plane);
 
         {
@@ -146,7 +153,7 @@
               const material = node.material;
               console.log(node.material.name);
               if (materialName == material.name) {
-                const newMaterial = new THREE.MeshPhongMaterial({
+                const newMaterial = new THREE.MeshBasicMaterial({
                   map: renderTargetTexture,
                 });
                 node.material = newMaterial;
@@ -232,19 +239,6 @@
             wireframe: false,
           });
 
-          cube = new THREE.Mesh(geometryCube, material);
-          sphere = new THREE.Mesh(geometrySphere, material);
-          cylinder = new THREE.Mesh(geometryCylinder, material);
-
-          cube.position.x = -1.5;
-          sphere.position.x = 0;
-          cylinder.position.x = 1.5;
-
-          renderTargetScene.add(cube);
-          renderTargetScene.add(sphere);
-          renderTargetScene.add(cylinder);
-          renderTargetScene.add(cylinder);
-
           const ambientLightRenderTarget = new THREE.AmbientLight(0x404040); // Soft ambient light
           renderTargetScene.add(ambientLightRenderTarget);
           const directionalLightRenderTarget = new THREE.DirectionalLight(
@@ -292,12 +286,12 @@
             "Resources/Textures/background.png",
           ]);
           scene.background = texture;
-          //renderTargetScene.background = texture;
-          sceneRenderTarget.background = texture;
         }
 
         function render() {
           const elapsedTime = clock.getElapsedTime();
+          cubeRenderTarget.rotation.x += 0.01;
+          cubeRenderTarget.rotation.y += 0.01;
 
           if (cube && sphere && cylinder) {
             cube.rotation.x += 0.01;
