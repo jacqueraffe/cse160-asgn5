@@ -61,7 +61,7 @@
           cubeRenderTargetGeometry,
           cubeRenderTargetMaterial
         );
-        cubeRenderTarget.position.y +=1;
+        cubeRenderTarget.position.y += 1;
         cubeRenderTarget.scale.set(0.75, 0.75, 0.75);
         sceneRenderTarget.add(cubeRenderTarget);
 
@@ -284,6 +284,63 @@
           });
         }
 
+        //Note to grader used AI to add tetrahedrons, but then edited it
+        /**
+         * Translates a point in 3D space away from another point by a specified distance.
+         *
+         * @param {THREE.Vector3} pointToTranslate - The point to be translated (moved).
+         * @param {THREE.Vector3} originPoint - The point to move away from.
+         * @param {number} distance - The distance to translate the point away from the origin.
+         * @returns {THREE.Vector3} A new THREE.Vector3 representing the translated point.
+         */
+        function translatePointAwayFromPoint(
+          pointToTranslate,
+          originPoint,
+          distance
+        ) {
+          const directionVector = new THREE.Vector3().subVectors(
+            pointToTranslate,
+            originPoint
+          );
+          const normalizedDirection = directionVector.normalize();
+          const translationVector =
+            normalizedDirection.multiplyScalar(distance);
+          return translationVector;
+        }
+        const textureLoader = new THREE.TextureLoader();
+        const tetrahedrons = [];
+        for (let i = 0; i < 50; i++) {
+          const geometry = new THREE.TetrahedronGeometry(0.8); // Size of the tetrahedron
+          const texture = textureLoader.load(
+            "Resources/Textures/threeJSLogo.png"
+          );
+          const material = new THREE.MeshStandardMaterial({ map: texture });
+          const tetrahedron = new THREE.Mesh(geometry, material);
+          tetrahedron.position.set(
+            (Math.random() - 0.5) * 30, // Random X position within a range
+            Math.random() * 10, // Random Y position within a range
+            (Math.random() - 0.5) * 30 // Random Z position within a range
+          );
+          var origin = new THREE.Vector3(0,0,0);
+          tetrahedron.position.add(translatePointAwayFromPoint(tetrahedron.position, origin, 3));
+
+
+          // 6. Store initial rotation speeds for animation
+          tetrahedron.rotationSpeed = {
+            x: (Math.random() - 0.5) * 0.01, // Random rotation speed around X-axis
+            y: (Math.random() - 0.5) * 0.01, // Random rotation speed around Y-axis
+            z: (Math.random() - 0.5) * 0.01, // Random rotation speed around Z-axis
+          };
+
+          // 7. Store initial floating parameters
+          tetrahedron.floatSpeed = (Math.random() + 0.5) * 0.005; // Random float speed
+          tetrahedron.floatOffset = Math.random() * Math.PI * 2; // Random phase offset for floating
+
+          // Add the tetrahedron to the scene and our array
+          scene.add(tetrahedron);
+          tetrahedrons.push(tetrahedron);
+        }
+
         function resizeRendererToDisplaySize(renderer) {
           const canvas = renderer.domElement;
           const width = canvas.clientWidth;
@@ -310,6 +367,20 @@
         }
 
         function render() {
+          // Rotate and Float each tetrahedron
+          tetrahedrons.forEach((tetrahedron, index) => {
+            // Rotation
+            tetrahedron.rotation.x += tetrahedron.rotationSpeed.x;
+            tetrahedron.rotation.y += tetrahedron.rotationSpeed.y;
+            tetrahedron.rotation.z += tetrahedron.rotationSpeed.z;
+
+            // Floating (Sine wave for smooth up and down motion)
+            tetrahedron.position.y +=
+              Math.sin(
+                Date.now() * tetrahedron.floatSpeed + tetrahedron.floatOffset
+              ) * 0.002; // Adjust amplitude (0.002) and speed (tetrahedron.floatSpeed) as needed
+          });
+
           const elapsedTime = clock.getElapsedTime();
           cubeRenderTarget.rotation.x += 0.01;
           cubeRenderTarget.rotation.y += 0.01;
