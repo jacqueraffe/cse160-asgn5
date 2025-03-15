@@ -16,7 +16,7 @@
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
+      import {RectAreaLightHelper} from 'three/addons/helpers/RectAreaLightHelper.js';
       function main() {
         const clock = new THREE.Clock();
         let cube;
@@ -105,17 +105,6 @@
             minFilter: THREE.LinearMipMapLinearFilter, // Use a mipmap filter
           }
         );
-        
-        const width = 10;
-const height = 10;
-const intensity = 1;
-const rectLight = new THREE.RectAreaLight( 0xffffff, intensity,  width, height );
-rectLight.position.set( 5, 5, 0 );
-rectLight.lookAt( 0, 0, 0 );
-scene.add( rectLight )
-
-const rectLightHelper = new RectAreaLightHelper( rectLight );
-rectLight.add( rectLightHelper );
 
         // Create a material using the render target texture
         const planeMaterial = new THREE.MeshBasicMaterial({
@@ -226,6 +215,9 @@ rectLight.add( rectLightHelper );
               controls.update();
             }
           );
+          
+       
+scene.fog = new THREE.Fog( 0x444444, 12, 25 );
 
           gltfLoader.load("Resources/Models/boy_nerd.glb", (gltf) => {
             const root = gltf.scene;
@@ -298,12 +290,12 @@ rectLight.add( rectLightHelper );
         {
           const loader = new THREE.CubeTextureLoader();
           const texture = loader.load([
-            "Resources/Textures/background.png",
-            "Resources/Textures/background.png",
-            "Resources/Textures/background.png",
-            "Resources/Textures/background.png",
-            "Resources/Textures/background.png",
-            "Resources/Textures/background.png",
+            "Resources/Textures/cave.jgp",
+            "Resources/Textures/cave.jgp",
+            "Resources/Textures/cave.jgp",
+            "Resources/Textures/cave.jgp",
+            "Resources/Textures/cave.jgp",
+            "Resources/Textures/cave.jgp",
           ]);
           scene.background = texture;
         }
