@@ -140,7 +140,7 @@
         }
         // ambient light
         const color = 0xffffff;
-        const intensity = 0.5;
+        const intensity = 0.2;
         const light = new THREE.AmbientLight(color, intensity);
         scene.add(light);
 
@@ -290,12 +290,12 @@ scene.fog = new THREE.Fog( 0x444444, 12, 25 );
         {
           const loader = new THREE.CubeTextureLoader();
           const texture = loader.load([
-            "Resources/Textures/cave.jgp",
-            "Resources/Textures/cave.jgp",
-            "Resources/Textures/cave.jgp",
-            "Resources/Textures/cave.jgp",
-            "Resources/Textures/cave.jgp",
-            "Resources/Textures/cave.jgp",
+            "Resources/Textures/cave.png",
+            "Resources/Textures/cave.png",
+            "Resources/Textures/cave.png",
+            "Resources/Textures/cave.png",
+            "Resources/Textures/cave.png",
+            "Resources/Textures/cave.png",
           ]);
           scene.background = texture;
         }
@@ -331,11 +331,9 @@ scene.fog = new THREE.Fog( 0x444444, 12, 25 );
         requestAnimationFrame(render);
       }
       /*
-      add ambient, rectangular and spot light lighting big scene
+      rectangular 
       array of floating spheres around with texture on them (20)
-      fog
       shadows
-      make shapes have lighting? and also make the animation better
       */
 
       main();
