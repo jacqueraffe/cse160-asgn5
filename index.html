@@ -16,7 +16,7 @@
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-      import {RectAreaLightHelper} from 'three/addons/helpers/RectAreaLightHelper.js';
+      import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
       function main() {
         const clock = new THREE.Clock();
         let cube;
@@ -29,6 +29,8 @@
 
         const canvas = document.querySelector("#c");
         const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         const fov = 45;
         const aspect = 2; // the canvas default
@@ -59,7 +61,8 @@
           cubeRenderTargetGeometry,
           cubeRenderTargetMaterial
         );
-        cubeRenderTarget.position.y += 1;
+        cubeRenderTarget.position.y +=1;
+        cubeRenderTarget.scale.set(0.75, 0.75, 0.75);
         sceneRenderTarget.add(cubeRenderTarget);
 
         const cylinderRenderTargetGeometry = new THREE.CylinderGeometry();
@@ -70,7 +73,7 @@
           cylinderRenderTargetGeometry,
           cylinderRenderTargetMaterial
         );
-        cylinderRenderTarget.position.y += 0.5;
+        cylinderRenderTarget.scale.set(0.5, 0.5, 0.5);
         sceneRenderTarget.add(cylinderRenderTarget);
 
         const sphereRenderTargetGeometry = new THREE.SphereGeometry();
@@ -81,7 +84,8 @@
           sphereRenderTargetGeometry,
           sphereRenderTargetMaterial
         );
-        sphereRenderTarget.position.y -= 0.5;
+        sphereRenderTarget.position.y -= 1;
+        sphereRenderTarget.scale.set(0.5, 0.5, 0.5);
         sceneRenderTarget.add(sphereRenderTarget);
 
         const scene = new THREE.Scene();
@@ -115,6 +119,12 @@
         plane.rotation.x = Math.PI * -0.085;
         plane.position.z += 0.11;
         scene.add(plane);
+
+        const rectLight = new THREE.RectAreaLight(0xffffff, 15, 0.85, 0.85);
+        rectLight.position.y += 3.95;
+        rectLight.position.z += 0.1;
+        rectLight.lookAt(0, 0, 15);
+        scene.add(rectLight);
 
         {
           const planeSize = 40;
@@ -152,7 +162,7 @@
           Math.PI / 5,
           0.1
         );
-        spotLight.position.set(0, 10, 0);
+        spotLight.position.set(0, 8, 0);
         spotLight.castShadow = true;
         spotLight.shadow.mapSize.width = 512;
         spotLight.shadow.mapSize.height = 512;
@@ -215,9 +225,8 @@
               controls.update();
             }
           );
-          
-       
-scene.fog = new THREE.Fog( 0x444444, 12, 25 );
+
+          scene.fog = new THREE.Fog(0x444444, 15, 25);
 
           gltfLoader.load("Resources/Models/boy_nerd.glb", (gltf) => {
             const root = gltf.scene;
@@ -225,10 +234,10 @@ scene.fog = new THREE.Fog( 0x444444, 12, 25 );
             root.rotation.y = Math.PI;
             root.position.z += 2;
             gltf.scene.traverse(function (node) {
-                if (node.isMesh) {
-                  node.castShadow = true;
-                }
-              });
+              if (node.isMesh) {
+                node.castShadow = true;
+              }
+            });
             scene.add(root);
           });
 
@@ -267,10 +276,10 @@ scene.fog = new THREE.Fog( 0x444444, 12, 25 );
             root.position.z -= 0.5;
             root.position.y += 4;
             gltf.scene.traverse(function (node) {
-                if (node.isMesh) {
-                  node.castShadow = true;
-                }
-              });
+              if (node.isMesh) {
+                node.castShadow = true;
+              }
+            });
             scene.add(root);
           });
         }
@@ -330,11 +339,6 @@ scene.fog = new THREE.Fog( 0x444444, 12, 25 );
 
         requestAnimationFrame(render);
       }
-      /*
-      rectangular 
-      array of floating spheres around with texture on them (20)
-      shadows
-      */
 
       main();
     </script>
