@@ -59,7 +59,7 @@
           cubeRenderTargetGeometry,
           cubeRenderTargetMaterial
         );
-        cubeRenderTarget.position.y+=1;
+        cubeRenderTarget.position.y += 1;
         sceneRenderTarget.add(cubeRenderTarget);
 
         const cylinderRenderTargetGeometry = new THREE.CylinderGeometry();
@@ -70,7 +70,7 @@
           cylinderRenderTargetGeometry,
           cylinderRenderTargetMaterial
         );
-        cylinderRenderTarget.position.y+=0.5;
+        cylinderRenderTarget.position.y += 0.5;
         sceneRenderTarget.add(cylinderRenderTarget);
 
         const sphereRenderTargetGeometry = new THREE.SphereGeometry();
@@ -81,7 +81,7 @@
           sphereRenderTargetGeometry,
           sphereRenderTargetMaterial
         );
-        sphereRenderTarget.position.y-=0.5;
+        sphereRenderTarget.position.y -= 0.5;
         sceneRenderTarget.add(sphereRenderTarget);
 
         const scene = new THREE.Scene();
@@ -105,6 +105,17 @@
             minFilter: THREE.LinearMipMapLinearFilter, // Use a mipmap filter
           }
         );
+        
+        const width = 10;
+const height = 10;
+const intensity = 1;
+const rectLight = new THREE.RectAreaLight( 0xffffff, intensity,  width, height );
+rectLight.position.set( 5, 5, 0 );
+rectLight.lookAt( 0, 0, 0 );
+scene.add( rectLight )
+
+const rectLightHelper = new RectAreaLightHelper( rectLight );
+rectLight.add( rectLightHelper );
 
         // Create a material using the render target texture
         const planeMaterial = new THREE.MeshBasicMaterial({
@@ -135,31 +146,31 @@
           });
           const mesh = new THREE.Mesh(planeGeo, planeMat);
           mesh.rotation.x = Math.PI * -0.5;
+          mesh.receiveShadow = true;
           scene.add(mesh);
         }
+        // ambient light
+        const color = 0xffffff;
+        const intensity = 0.5;
+        const light = new THREE.AmbientLight(color, intensity);
+        scene.add(light);
 
-        {
-          const skyColor = 0xb1e1ff; // light blue
-          const groundColor = 0xb97a20; // brownish orange
-          const intensity = 2;
-          const light = new THREE.HemisphereLight(
-            skyColor,
-            groundColor,
-            intensity
-          );
-          scene.add(light);
-        }
-
-        {
-          const color = 0xffffff;
-          const intensity = 2.5;
-          const light = new THREE.DirectionalLight(color, intensity);
-          light.position.set(5, 10, 2);
-          scene.add(light);
-          scene.add(light.target);
-        }
-
-      //   
+        //spot light
+        const spotLight = new THREE.SpotLight(
+          0xffffff,
+          150,
+          0,
+          Math.PI / 5,
+          0.1
+        );
+        spotLight.position.set(0, 10, 0);
+        spotLight.castShadow = true;
+        spotLight.shadow.mapSize.width = 512;
+        spotLight.shadow.mapSize.height = 512;
+        spotLight.shadow.camera.near = 1;
+        spotLight.shadow.camera.far = 20;
+        spotLight.shadow.camera.fov = 30;
+        scene.add(spotLight);
 
         function frameArea(sizeToFitOnScreen, boxSize, boxCenter, camera) {
           const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
@@ -196,6 +207,11 @@
             (gltf) => {
               const root = gltf.scene;
               root.scale.set(3.0, 3.0, 3.0);
+              gltf.scene.traverse(function (node) {
+                if (node.isMesh) {
+                  node.castShadow = true;
+                }
+              });
               scene.add(root);
               // compute the box that contains all the stuff
               // from root and below
@@ -216,6 +232,11 @@
             root.scale.set(3.25, 3.25, 3.25);
             root.rotation.y = Math.PI;
             root.position.z += 2;
+            gltf.scene.traverse(function (node) {
+                if (node.isMesh) {
+                  node.castShadow = true;
+                }
+              });
             scene.add(root);
           });
 
@@ -253,6 +274,11 @@
             root.scale.set(0.5, 0.5, 0.5);
             root.position.z -= 0.5;
             root.position.y += 4;
+            gltf.scene.traverse(function (node) {
+                if (node.isMesh) {
+                  node.castShadow = true;
+                }
+              });
             scene.add(root);
           });
         }
@@ -312,6 +338,13 @@
 
         requestAnimationFrame(render);
       }
+      /*
+      add ambient, rectangular and spot light lighting big scene
+      array of floating spheres around with texture on them (20)
+      fog
+      shadows
+      make shapes have lighting? and also make the animation better
+      */
 
       main();
     </script>
